@@ -1,11 +1,15 @@
-import { GoogleGenAI, Modality } from "@google/genai";
+import { GoogleGenAI, Modality, Content } from "@google/genai";
+import { ChatMessage } from "../types";
 
-// Initialize AI with the environment key
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+let aiInstance: GoogleGenAI | null = null;
 
-/**
- * Converts Base64 PCM 16-bit Little Endian to Float32 for Web Audio API
- */
+function getAI() {
+  if (!aiInstance) {
+    aiInstance = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+  }
+  return aiInstance;
+}
+
 function pcmToFloat32(base64: string): Float32Array {
   const binaryString = window.atob(base64);
   const len = binaryString.length;
@@ -24,21 +28,55 @@ function pcmToFloat32(base64: string): Float32Array {
   return float32Buffer;
 }
 
-export async function askExpert(prompt: string): Promise<{ text: string, audio?: string }> {
+export async function askExpert(
+  prompt: string, 
+  history: ChatMessage[] = []
+): Promise<{ text: string, audio?: string }> {
   try {
+    const ai = getAI();
+    // Convert history to Gemini format
+    const contents: Content[] = history.map(msg => ({
+      role: msg.role === 'user' ? 'user' : 'model',
+      parts: [{ text: msg.text }]
+    }));
+
+    // Add the current prompt
+    contents.push({ role: 'user', parts: [{ text: prompt }] });
+
+    const systemInstruction = `
+You are safe, helpful, and a conversational Industrial Automation & PLC Training Mentor. 
+Your goal is to guide electrical engineers through their journey into automation.
+
+TONE & STYLE:
+- Professional yet encouraging and warm.
+- Use engineering terminology but explain complex concepts clearly.
+- Be proactive: if a student asks a basic question, provide the answer AND suggest a logical next step or ask a related "knowledge check" question.
+- Keep responses engaging but focused on the training material.
+
+BILINGUAL CAPABILITY:
+- You are perfectly fluent in English and Amharic (አማርኛ).
+- Respond in the language the user uses.
+- For Amharic responses, ensure the tone remains professional and technically accurate, using standard Amharic industrial terms where they exist.
+- If a user mixes languages, respond in the language that seems primary or offer to explain in both if the topic is complex.
+
+STRICT RULE:
+- ALWAYS check if the user understood your explanation.
+- If the user seems confused, use an analogy (e.g., comparing a PLC to a human brain or an electrical relay to a simple light switch).
+`.trim();
+
     // 1. Get Text response
     const textResponse = await ai.models.generateContent({
       model: "gemini-3-flash-preview",
-      contents: [{ parts: [{ text: prompt }] }],
+      contents: contents,
       config: {
-        systemInstruction: "You are a professional industrial automation expert. Provide concise, engineering-focused answers about PLCs, sensors, and industrial standards. You MUST respond in the language the user uses (English or Amharic). Use professional terminology.",
+        systemInstruction: systemInstruction,
       }
     });
 
     const textOutput = textResponse.text;
     if (!textOutput) throw new Error("No text output received");
 
-    // 2. Get Audio response (Parallel but sequential for reliability)
+    // 2. Get Audio response
     let audioOutput: string | undefined;
     try {
       const speechResponse = await ai.models.generateContent({
@@ -62,7 +100,7 @@ export async function askExpert(prompt: string): Promise<{ text: string, audio?:
     return { text: textOutput, audio: audioOutput };
   } catch (error) {
     console.error("AI Assistant Error:", error);
-    return { text: "Connection error. Please ensure you have configured your AI Studio Gemini API key in the secrets panel." };
+    return { text: "የግንኙነት ስህተት ተከስቷል። እባክዎ ኢንተርኔትዎን ይፈትሹ። (Connection error. Please check your connection.)" };
   }
 }
 

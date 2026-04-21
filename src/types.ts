@@ -22,3 +22,9 @@ export interface Exercise {
   hint?: string;
   solution?: string;
 }
+
+export interface ChatMessage {
+  role: 'user' | 'ai';
+  text: string;
+  audio?: string;
+}
