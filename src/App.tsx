@@ -29,6 +29,33 @@ import { motion, AnimatePresence } from 'motion/react';
 import { SECTIONS, EXERCISES } from './content';
 import { SectionContent, Exercise, QuizQuestion, ChatMessage } from './types';
 
+const UI_STRINGS = {
+  EN: {
+    mainModules: "Main Modules",
+    practice: "Practice & Professional",
+    ladderExercises: "100 Ladder Exercises",
+    projects: "Real-world Projects",
+    career: "Career Path & Interview",
+    guestEngineer: "Guest Engineer",
+    systemReady: "System Ready",
+    careerGuide: "Career Transition & Mastering Industrial Automation",
+    skillsHeader: "Marketable Industrial Skills",
+    interviewQ: "Common Interview Questions"
+  },
+  AM: {
+    mainModules: "ዋና ሞጁሎች",
+    practice: "ተግባራዊ እና ሙያዊ",
+    ladderExercises: "100 የላደር ልምምዶች",
+    projects: "ተግባራዊ ፕሮጀክቶች",
+    career: "የሙያ መንገድ እና ቃለ መጠይቅ",
+    guestEngineer: "እንግዳ መሃንዲስ",
+    systemReady: "ስርዓቱ ዝግጁ ነው",
+    careerGuide: "የሙያ ለውጥ እና የኢንዱስትሪ አውቶሜሽን ትምህርት",
+    skillsHeader: "ተፈላጊ የኢንዱስትሪ ችሎታዎች",
+    interviewQ: "ተደጋጋሚ የቃለ መጠይቅ ጥያቄዎች"
+  }
+};
+
 // Custom components
 const SidebarItem = ({ 
   icon: Icon, 
@@ -55,20 +82,39 @@ const SidebarItem = ({
   </button>
 );
 
-const LadderExample = ({ title, logic, description }: { title: string, logic: string, description: string, key?: React.Key }) => (
+const LadderExample = ({ 
+  title, 
+  titleAm,
+  logic, 
+  description,
+  descriptionAm,
+  language
+}: { 
+  title: string, 
+  titleAm?: string,
+  logic: string, 
+  description: string,
+  descriptionAm?: string,
+  language: 'EN' | 'AM',
+  key?: React.Key 
+}) => (
   <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-6 my-6 font-mono overflow-x-auto">
     <div className="flex items-center justify-between mb-4">
-      <h4 className="text-orange-400 text-sm font-bold uppercase tracking-wider">{title}</h4>
+      <h4 className="text-orange-400 text-sm font-bold uppercase tracking-wider">
+        {language === 'AM' && titleAm ? titleAm : title}
+      </h4>
       <Activity size={16} className="text-zinc-600" />
     </div>
     <div className="text-zinc-300 whitespace-pre text-sm leading-relaxed mb-4 border-l-2 border-orange-500/30 pl-4 py-2">
       {logic}
     </div>
-    <p className="text-zinc-500 text-xs font-sans italic">{description}</p>
+    <p className="text-zinc-500 text-xs font-sans italic">
+      {language === 'AM' && descriptionAm ? descriptionAm : description}
+    </p>
   </div>
 );
 
-const Quiz = ({ quiz }: { quiz: QuizQuestion[] }) => {
+const Quiz = ({ quiz, language }: { quiz: QuizQuestion[], language: 'EN' | 'AM' }) => {
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [selectedOption, setSelectedOption] = useState<number | null>(null);
   const [isSubmitted, setIsSubmitted] = useState(false);
@@ -93,14 +139,20 @@ const Quiz = ({ quiz }: { quiz: QuizQuestion[] }) => {
     <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-8 my-10">
       <div className="flex items-center gap-2 mb-6">
         <HelpCircle size={20} className="text-orange-500" />
-        <h3 className="text-lg font-bold text-zinc-100">Section Assessment</h3>
-        <span className="ml-auto text-xs text-zinc-500">Question {currentQuestion + 1} of {quiz.length}</span>
+        <h3 className="text-lg font-bold text-zinc-100">
+          {language === 'AM' ? 'የክፍል ግምገማ' : 'Section Assessment'}
+        </h3>
+        <span className="ml-auto text-xs text-zinc-500">
+          {language === 'AM' ? 'ጥያቄ' : 'Question'} {currentQuestion + 1} {language === 'AM' ? 'ከ' : 'of'} {quiz.length}
+        </span>
       </div>
 
-      <p className="text-zinc-200 mb-8 text-lg">{quiz[currentQuestion].question}</p>
+      <p className="text-zinc-200 mb-8 text-lg">
+        {language === 'AM' && quiz[currentQuestion].questionAm ? quiz[currentQuestion].questionAm : quiz[currentQuestion].question}
+      </p>
 
       <div className="space-y-3">
-        {quiz[currentQuestion].options.map((opt, idx) => (
+        {(language === 'AM' && quiz[currentQuestion].optionsAm ? quiz[currentQuestion].optionsAm : quiz[currentQuestion].options).map((opt, idx) => (
           <button
             key={idx}
             disabled={isSubmitted}
@@ -131,24 +183,26 @@ const Quiz = ({ quiz }: { quiz: QuizQuestion[] }) => {
             onClick={handleSubmit}
             className="px-6 py-2 bg-orange-500 hover:bg-orange-600 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold rounded-lg transition-colors"
           >
-            Check Answer
+            {language === 'AM' ? 'መልስን አረጋግጥ' : 'Check Answer'}
           </button>
         ) : (
           <div className="flex-1">
-            <p className="text-sm text-zinc-400 mb-4">{quiz[currentQuestion].explanation}</p>
+            <p className="text-sm text-zinc-400 mb-4">
+              {language === 'AM' && quiz[currentQuestion].explanationAm ? quiz[currentQuestion].explanationAm : quiz[currentQuestion].explanation}
+            </p>
             {currentQuestion < quiz.length - 1 ? (
               <button
                 onClick={handleNext}
                 className="px-6 py-2 bg-zinc-700 hover:bg-zinc-600 text-white font-bold rounded-lg transition-colors flex items-center gap-2"
               >
-                Next Question <ChevronRight size={18} />
+                {language === 'AM' ? 'ቀጣይ ጥያቄ' : 'Next Question'} <ChevronRight size={18} />
               </button>
             ) : (
               <div className="p-4 bg-orange-500/10 border border-orange-500 rounded-lg flex items-center gap-4">
                 <CheckCircle2 className="text-orange-500" />
                 <div>
-                  <p className="font-bold text-orange-200">Quiz Completed!</p>
-                  <p className="text-sm text-orange-200/70">Your score: {score} / {quiz.length}</p>
+                  <p className="font-bold text-orange-200">{language === 'AM' ? 'ተጠናቋል!' : 'Quiz Completed!'}</p>
+                  <p className="text-sm text-orange-200/70">{language === 'AM' ? 'ውጤት' : 'Your score'}: {score} / {quiz.length}</p>
                 </div>
               </div>
             )}
@@ -353,7 +407,15 @@ const FloatingChat = ({
   );
 };
 
-const ExerciseModal = ({ exercise, onClose }: { exercise: Exercise, onClose: () => void }) => {
+const ExerciseModal = ({ 
+  exercise, 
+  onClose,
+  language
+}: { 
+  exercise: Exercise, 
+  onClose: () => void,
+  language: 'EN' | 'AM'
+}) => {
   const [showSolution, setShowSolution] = useState(false);
 
   return (
@@ -373,20 +435,30 @@ const ExerciseModal = ({ exercise, onClose }: { exercise: Exercise, onClose: () 
               } uppercase tracking-widest`}>
                 {exercise.difficulty}
               </span>
-              <h2 className="text-xl font-bold text-white">Exercise #{exercise.id.toString().padStart(3, '0')}</h2>
+              <h2 className="text-xl font-bold text-white">
+                {language === 'AM' ? 'መልመጃ' : 'Exercise'} #{exercise.id.toString().padStart(3, '0')}
+              </h2>
             </div>
             <button onClick={onClose} className="text-zinc-500 hover:text-white">
               <X size={24} />
             </button>
           </div>
 
-          <h3 className="text-lg font-bold text-zinc-100 mb-4">{exercise.title}</h3>
-          <p className="text-zinc-400 mb-8 leading-relaxed">{exercise.description}</p>
+          <h3 className="text-lg font-bold text-zinc-100 mb-4">
+            {language === 'AM' && exercise.titleAm ? exercise.titleAm : exercise.title}
+          </h3>
+          <p className="text-zinc-400 mb-8 leading-relaxed">
+            {language === 'AM' && exercise.descriptionAm ? exercise.descriptionAm : exercise.description}
+          </p>
 
           <div className="space-y-4">
             <div className="p-4 bg-zinc-900/50 border border-zinc-800 rounded-xl">
-              <h4 className="text-xs font-bold text-orange-500 uppercase tracking-widest mb-2">Technical Hint</h4>
-              <p className="text-zinc-400 text-sm italic">{exercise.hint}</p>
+              <h4 className="text-xs font-bold text-orange-500 uppercase tracking-widest mb-2">
+                {language === 'AM' ? 'ቴክኒካዊ ፍንጭ' : 'Technical Hint'}
+              </h4>
+              <p className="text-zinc-400 text-sm italic">
+                {language === 'AM' && exercise.hintAm ? exercise.hintAm : exercise.hint}
+              </p>
             </div>
 
             {showSolution ? (
@@ -395,9 +467,11 @@ const ExerciseModal = ({ exercise, onClose }: { exercise: Exercise, onClose: () 
                 animate={{ opacity: 1, y: 0 }}
                 className="p-6 bg-zinc-900 border border-orange-500/30 rounded-xl"
               >
-                <h4 className="text-xs font-bold text-orange-500 uppercase tracking-widest mb-4">Official Solution</h4>
+                <h4 className="text-xs font-bold text-orange-500 uppercase tracking-widest mb-4">
+                  {language === 'AM' ? 'ይፋዊ መፍትሄ' : 'Official Solution'}
+                </h4>
                 <pre className="font-mono text-zinc-200 text-sm whitespace-pre-wrap bg-black/50 p-4 rounded-lg border border-zinc-800">
-                  {exercise.solution}
+                  {language === 'AM' && exercise.solutionAm ? exercise.solutionAm : exercise.solution}
                 </pre>
               </motion.div>
             ) : (
@@ -406,7 +480,7 @@ const ExerciseModal = ({ exercise, onClose }: { exercise: Exercise, onClose: () 
                 className="w-full py-4 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 font-bold rounded-xl transition-all flex items-center justify-center gap-2"
               >
                 <CheckCircle2 size={18} className="text-orange-500" />
-                Reveal Correct Logic
+                {language === 'AM' ? 'ትክክለኛውን ሎጂክ አሳይ' : 'Reveal Correct Logic'}
               </button>
             )}
           </div>
@@ -424,6 +498,7 @@ export default function App() {
   const [isAILoading, setIsAILoading] = useState(false);
   const [aiHistory, setAiHistory] = useState<ChatMessage[]>([]);
   const [selectedExercise, setSelectedExercise] = useState<Exercise | null>(null);
+  const [language, setLanguage] = useState<'EN' | 'AM'>('EN');
 
   const handleAIMessage = async (msg: string) => {
     setIsAILoading(true);
@@ -475,14 +550,41 @@ export default function App() {
           </div>
 
           <nav className="flex-1 overflow-y-auto py-4 scrollbar-hide">
+            <div className="px-6 mb-4">
+              <div className="p-1 bg-zinc-900 border border-zinc-800 rounded-lg flex items-center gap-1">
+                <button 
+                  onClick={() => setLanguage('EN')}
+                  className={`flex-1 py-1.5 text-[9px] font-black rounded transition-all ${
+                    language === 'EN' 
+                    ? 'bg-orange-500 text-black shadow-[0_0_15px_rgba(249,115,22,0.4)]' 
+                    : 'text-zinc-500 hover:text-zinc-300'
+                  }`}
+                >
+                  ENGLISH
+                </button>
+                <button 
+                  onClick={() => setLanguage('AM')}
+                  className={`flex-1 py-1.5 text-[9px] font-black rounded transition-all font-sans ${
+                    language === 'AM' 
+                    ? 'bg-orange-500 text-black shadow-[0_0_15px_rgba(249,115,22,0.4)]' 
+                    : 'text-zinc-500 hover:text-zinc-300'
+                  }`}
+                >
+                  አማርኛ
+                </button>
+              </div>
+            </div>
+
             <div className="px-6 mb-2">
-              <span className="text-[10px] font-bold uppercase text-zinc-600 tracking-widest">Main Modules</span>
+              <span className="text-[10px] font-bold uppercase text-zinc-600 tracking-widest">
+                {UI_STRINGS[language].mainModules}
+              </span>
             </div>
             {SECTIONS.map((section) => (
               <SidebarItem
                 key={section.id}
                 icon={BookOpen}
-                label={section.title}
+                label={language === 'AM' && section.titleAm ? section.titleAm : section.title}
                 isActive={view === 'content' && activeSectionId === section.id}
                 onClick={() => {
                   setView('content');
@@ -493,11 +595,13 @@ export default function App() {
             ))}
             
             <div className="px-6 mt-8 mb-2">
-              <span className="text-[10px] font-bold uppercase text-zinc-600 tracking-widest">Practice & Professional</span>
+              <span className="text-[10px] font-bold uppercase text-zinc-600 tracking-widest">
+                {UI_STRINGS[language].practice}
+              </span>
             </div>
             <SidebarItem
               icon={ClipboardList}
-              label="100 Ladder Exercises"
+              label={UI_STRINGS[language].ladderExercises}
               isActive={view === 'exercises'}
               onClick={() => { 
                 setView('exercises');
@@ -506,13 +610,13 @@ export default function App() {
             />
             <SidebarItem
               icon={Activity}
-              label="Real-world Projects"
+              label={UI_STRINGS[language].projects}
               isActive={false} // Placeholder
               onClick={() => {}}
             />
             <SidebarItem
               icon={ArrowRight}
-              label="Career Path & Interview"
+              label={UI_STRINGS[language].career}
               isActive={view === 'career'}
               onClick={() => {
                 setView('career');
@@ -523,14 +627,14 @@ export default function App() {
 
           <div className="p-6 mt-auto border-t border-zinc-900 bg-zinc-950/50">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-zinc-800 border border-zinc-700 flex items-center justify-center text-zinc-400 font-bold text-xs">
-                ENG
+              <div className="w-10 h-10 rounded-full bg-zinc-800 border border-zinc-700 flex items-center justify-center text-zinc-400 font-bold text-[10px]">
+                {language === 'EN' ? 'ENG' : 'አማ'}
               </div>
               <div>
-                <p className="text-xs font-bold text-zinc-100">Guest Engineer</p>
+                <p className="text-xs font-bold text-zinc-100">{UI_STRINGS[language].guestEngineer}</p>
                 <div className="flex items-center gap-1 mt-0.5">
                   <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></div>
-                  <p className="text-[10px] text-zinc-500 font-medium">System Ready</p>
+                  <p className="text-[10px] text-zinc-500 font-medium">{UI_STRINGS[language].systemReady}</p>
                 </div>
               </div>
               <Settings size={18} className="ml-auto text-zinc-600 hover:text-zinc-400 cursor-pointer" />
@@ -562,7 +666,7 @@ export default function App() {
             <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" />
             <input 
               type="text" 
-              placeholder="Search chapters, sensors, or commands..."
+              placeholder={language === 'AM' ? "ምዕራፎችን፣ ሴንሰሮችን ወይም ትዕዛዞችን ይፈልጉ..." : "Search chapters, sensors, or commands..."}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full bg-zinc-900 border border-zinc-800 rounded-lg py-2 pl-10 pr-4 text-sm text-zinc-200 placeholder:text-zinc-600 focus:outline-none focus:border-orange-500/50 transition-colors"
@@ -601,14 +705,14 @@ export default function App() {
                     <div className="h-px flex-1 bg-zinc-800/50"></div>
                   </div>
                   <h2 className="text-4xl md:text-5xl font-black text-white italic tracking-tighter mb-4 leading-none">
-                    {activeSection.title}
+                    {language === 'AM' && activeSection.titleAm ? activeSection.titleAm : activeSection.title}
                   </h2>
                 </div>
-
+ 
                 <article className="prose prose-invert max-w-none prose-orange prose-headings:italic prose-headings:font-black prose-headings:tracking-tighter prose-headings:text-zinc-100 prose-p:text-zinc-400 prose-p:leading-relaxed prose-strong:text-orange-400 prose-li:text-zinc-400 prose-table:border prose-table:border-zinc-800 prose-th:bg-zinc-900 prose-th:p-4 prose-td:p-4 opacity-100">
                   <div className="space-y-6">
                     {/* Render markdown-ish content */}
-                    {activeSection.content.split('\n').map((line, i) => {
+                    {(language === 'AM' && activeSection.contentAm ? activeSection.contentAm : activeSection.content).split('\n').map((line, i) => {
                       if (line.startsWith('###')) return <h3 key={i} className="text-2xl mt-10 mb-4">{line.replace('###', '').trim()}</h3>;
                       if (line.startsWith('##')) return <h2 key={i} className="text-3xl mt-12 mb-6">{line.replace('##', '').trim()}</h2>;
                       if (line.startsWith('-')) return <li key={i} className="ml-4 mb-2">{line.replace('-', '').trim()}</li>;
@@ -621,21 +725,21 @@ export default function App() {
                     })}
                   </div>
                 </article>
-
+ 
                 {activeSection.examples?.map((ex, idx) => (
-                  <LadderExample key={idx} {...ex} />
+                  <LadderExample key={idx} {...ex} language={language} />
                 ))}
-
-                {activeSection.quiz && <Quiz quiz={activeSection.quiz} />}
-
+ 
+                {activeSection.quiz && <Quiz quiz={activeSection.quiz} language={language} />}
+ 
                 {/* Progress Footer */}
                 <div className="mt-20 pt-12 border-t border-zinc-900 flex flex-col md:flex-row items-center justify-between gap-6">
                   <div>
-                    <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-[0.2em] mb-2">Next Chapter</p>
-                    <h5 className="text-lg font-black text-zinc-300 italic">PLC Hardware & Architecture</h5>
+                    <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-[0.2em] mb-2">{language === 'AM' ? 'ቀጣይ ምዕራፍ' : 'Next Chapter'}</p>
+                    <h5 className="text-lg font-black text-zinc-300 italic">{language === 'AM' ? 'PLC ሃርድዌር እና አርክቴክቸር' : 'PLC Hardware & Architecture'}</h5>
                   </div>
                   <button className="flex items-center gap-3 px-8 py-4 bg-orange-500 text-black font-black uppercase italic tracking-tighter rounded-xl hover:bg-orange-400 transition-all hover:scale-[1.02] shadow-[0_0_30px_rgba(249,115,22,0.15)]">
-                    Begin Assessment <Play size={20} fill="currentColor" />
+                    {language === 'AM' ? 'ትምህርቱን ጀምር' : 'Begin Assessment'} <Play size={20} fill="currentColor" />
                   </button>
                 </div>
               </motion.div>
@@ -650,8 +754,14 @@ export default function App() {
                 className="max-w-6xl mx-auto px-8 py-12"
               >
                 <div className="mb-12">
-                  <h2 className="text-5xl font-black text-white italic tracking-tighter mb-4">100 BATTLE-TESTED EXERCISES</h2>
-                  <p className="text-zinc-500 max-w-2xl">From simple logic gates to complex industrial sequences. Master ladder logic by solving real industrial problems.</p>
+                  <h2 className="text-5xl font-black text-white italic tracking-tighter mb-4">
+                    {language === 'AM' ? '100 በጦርነት የተፈተኑ ልምምዶች' : '100 BATTLE-TESTED EXERCISES'}
+                  </h2>
+                  <p className="text-zinc-500 max-w-2xl">
+                    {language === 'AM' 
+                      ? 'ከቀላል ሎጂክ ጌቶች እስከ ውስብስብ የኢንዱስትሪ ቅደም ተከተሎች። እውነተኛ የኢንዱስትሪ ችግሮችን በመፍታት የላደር ሎጂክን ይለማመዱ።' 
+                      : 'From simple logic gates to complex industrial sequences. Master ladder logic by solving real industrial problems.'}
+                  </p>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -667,13 +777,17 @@ export default function App() {
                         </span>
                         <span className="text-zinc-700 font-black text-xl italic group-hover:text-orange-500/20 transition-colors">#{ex.id.toString().padStart(3, '0')}</span>
                       </div>
-                      <h3 className="text-zinc-100 font-bold mb-3">{ex.title}</h3>
-                      <p className="text-zinc-400 text-sm mb-6 line-clamp-2">{ex.description}</p>
+                      <h3 className="text-zinc-100 font-bold mb-3">
+                        {language === 'AM' && ex.titleAm ? ex.titleAm : ex.title}
+                      </h3>
+                      <p className="text-zinc-400 text-sm mb-6 line-clamp-2">
+                        {language === 'AM' && ex.descriptionAm ? ex.descriptionAm : ex.description}
+                      </p>
                       <button 
                         onClick={() => setSelectedExercise(ex)}
                         className="w-full py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-xs font-bold uppercase tracking-widest text-zinc-400 hover:bg-orange-500 hover:text-black hover:border-orange-500 transition-all"
                       >
-                        Solve Challenge
+                        {language === 'AM' ? 'ፈተናውን ፍታ' : 'Solve Challenge'}
                       </button>
                     </div>
                   ))}
@@ -693,15 +807,26 @@ export default function App() {
                   <div className="absolute top-0 right-0 w-64 h-64 bg-orange-500/10 blur-[100px] pointer-events-none"></div>
                   
                   <ShieldCheck size={64} className="text-orange-500 mb-8" />
-                  <h2 className="text-5xl font-black text-white italic tracking-tighter mb-6 leading-none">THE CAREER OF AN<br/>AUTOMATION ENGINEER</h2>
+                  <h2 className="text-5xl font-black text-white italic tracking-tighter mb-6 leading-none">
+                    {language === 'AM' ? <>የአውቶሜሽን ኢንጂነር<br/>የሙያ መንገድ</> : <>THE CAREER OF AN<br/>AUTOMATION ENGINEER</>}
+                  </h2>
                   
                   <div className="space-y-8 mt-12">
                     <section>
-                      <h4 className="text-orange-500 font-black uppercase text-sm tracking-widest mb-4">Key Skills Required</h4>
+                      <h4 className="text-orange-500 font-black uppercase text-sm tracking-widest mb-4">
+                        {UI_STRINGS[language].skillsHeader}
+                      </h4>
                       <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                        {['Reading Diagrams', 'PLC Programming', 'HMI/SCADA Design', 'VFD Configuration', 'Industrial Networks', 'Troubleshooting'].map(skill => (
-                          <div key={skill} className="bg-zinc-950 border border-zinc-800 p-4 rounded-xl text-zinc-300 font-bold text-sm">
-                            {skill}
+                        {[
+                          { en: 'Reading Diagrams', am: 'ዲያግራሞችን ማንበብ' },
+                          { en: 'PLC Programming', am: 'PLC ፕሮግራም ማውጣት' },
+                          { en: 'HMI/SCADA Design', am: 'HMI/SCADA ዲዛይን' },
+                          { en: 'VFD Configuration', am: 'VFD ኮንፊገሬሽን' },
+                          { en: 'Industrial Networks', am: 'የኢንዱስትሪ ኔትወርኮች' },
+                          { en: 'Troubleshooting', am: 'ብልሽት ፍለጋ' }
+                        ].map(skill => (
+                          <div key={skill.en} className="bg-zinc-950 border border-zinc-800 p-4 rounded-xl text-zinc-300 font-bold text-sm">
+                            {language === 'AM' ? skill.am : skill.en}
                           </div>
                         ))}
                       </div>
@@ -710,16 +835,28 @@ export default function App() {
                     <section className="bg-zinc-950/50 p-8 border border-zinc-800 rounded-2xl">
                       <h4 className="text-zinc-100 font-bold mb-6 flex items-center gap-2">
                         <ArrowRight size={20} className="text-orange-500" />
-                        Common Interview Questions
+                        {UI_STRINGS[language].interviewQ}
                       </h4>
                       <ul className="space-y-4">
                         <li className="p-4 bg-zinc-900/50 rounded-lg border border-zinc-800">
-                          <p className="text-orange-400 font-bold text-sm mb-1">Q: What is the difference between Sinking and Sourcing?</p>
-                          <p className="text-zinc-500 text-xs">A: Sinking (NPN) inputs connect to common negative, Sourcing (PNP) inputs connect to common positive.</p>
+                          <p className="text-orange-400 font-bold text-sm mb-1">
+                            {language === 'AM' ? 'ጥ: በ Sinking እና Sourcing መካከል ያለው ልዩነት ምንድነው?' : 'Q: What is the difference between Sinking and Sourcing?'}
+                          </p>
+                          <p className="text-zinc-500 text-xs">
+                            {language === 'AM' 
+                              ? 'መ: Sinking (NPN) ኢንፑቶች ከጋራ ኔጋቲቭ ጋር ይገናኛሉ፣ Sourcing (PNP) ኢንፑቶች ደግሞ ከጋራ ፖዘቲቭ ጋር ይገናኛሉ።' 
+                              : 'A: Sinking (NPN) inputs connect to common negative, Sourcing (PNP) inputs connect to common positive.'}
+                          </p>
                         </li>
                         <li className="p-4 bg-zinc-900/50 rounded-lg border border-zinc-800">
-                          <p className="text-orange-400 font-bold text-sm mb-1">Q: Explain a Watchdog Timer.</p>
-                          <p className="text-zinc-500 text-xs">A: A safety feature that ensures the PLC finishes its scan cycle within a specified time limit.</p>
+                          <p className="text-orange-400 font-bold text-sm mb-1">
+                            {language === 'AM' ? 'ጥ: Watchdog Timer ምንድነው?' : 'Q: Explain a Watchdog Timer.'}
+                          </p>
+                          <p className="text-zinc-500 text-xs">
+                            {language === 'AM' 
+                              ? 'መ: PLC የስካን ዑደቱን በተወሰነ የጊዜ ገደብ ውስጥ ማጠናቀቁን የሚያረጋግጥ የደህንነት ባህሪ ነው።' 
+                              : 'A: A safety feature that ensures the PLC finishes its scan cycle within a specified time limit.'}
+                          </p>
                         </li>
                       </ul>
                     </section>
@@ -750,6 +887,7 @@ export default function App() {
           <ExerciseModal 
             exercise={selectedExercise} 
             onClose={() => setSelectedExercise(null)} 
+            language={language}
           />
         )}
       </AnimatePresence>
