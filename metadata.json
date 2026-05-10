@@ -1,6 +1,6 @@
 {
   "name": "LogixPro PLC Training Center",
   "description": "A comprehensive professional training guide for PLC (Programmable Logic Controller) covering fundamentals, hardware, wiring, ladder logic, and industrial automation techniques for electrical engineers.",
-  "requestFramePermissions": [],
+  "requestFramePermissions": ["microphone"],
   "majorCapabilities": []
 }

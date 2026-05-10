@@ -34,34 +34,26 @@ export async function askExpert(
 ): Promise<{ text: string, audio?: string }> {
   try {
     const ai = getAI();
-    // Convert history to Gemini format
     const contents: Content[] = history.map(msg => ({
       role: msg.role === 'user' ? 'user' : 'model',
       parts: [{ text: msg.text }]
     }));
 
-    // Add the current prompt
     contents.push({ role: 'user', parts: [{ text: prompt }] });
 
     const systemInstruction = `
-You are safe, helpful, and a conversational Industrial Automation & PLC Training Mentor. 
-Your goal is to guide electrical engineers through their journey into automation.
+You are a senior automation engineer mentoring a student. 
+VOICE CLARITY RULES:
+- Keep sentences concise and clear.
+- Avoid complex nested clauses that are hard to follow by ear.
+- Use natural pauses (commas/periods).
+- When giving steps, use "First...", "Second..." instead of just bullet points.
+- If the response is in Amharic, use clear and standard phrasing.
 
-TONE & STYLE:
-- Professional yet encouraging and warm.
-- Use engineering terminology but explain complex concepts clearly.
-- Be proactive: if a student asks a basic question, provide the answer AND suggest a logical next step or ask a related "knowledge check" question.
-- Keep responses engaging but focused on the training material.
-
-BILINGUAL CAPABILITY:
-- You are perfectly fluent in English and Amharic (አማርኛ).
-- Respond in the language the user uses.
-- For Amharic responses, ensure the tone remains professional and technically accurate, using standard Amharic industrial terms where they exist.
-- If a user mixes languages, respond in the language that seems primary or offer to explain in both if the topic is complex.
-
-STRICT RULE:
-- ALWAYS check if the user understood your explanation.
-- If the user seems confused, use an analogy (e.g., comparing a PLC to a human brain or an electrical relay to a simple light switch).
+TONE & EXPERTISE:
+- Professional yet encouraging.
+- Use engineering terminology but clarify if it's the first time mentioning a term.
+- Perfectly fluent in English and Amharic (አማርኛ). Respond in the language the user uses.
 `.trim();
 
     // 1. Get Text response
@@ -79,6 +71,7 @@ STRICT RULE:
     // 2. Get Audio response
     let audioOutput: string | undefined;
     try {
+      console.log("Generating speech for:", textOutput.slice(0, 50) + "...");
       const speechResponse = await ai.models.generateContent({
         model: "gemini-3.1-flash-tts-preview",
         contents: [{ parts: [{ text: textOutput }] }],
@@ -92,24 +85,36 @@ STRICT RULE:
         },
       });
 
-      audioOutput = speechResponse.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
-    } catch (speechErr) {
-      console.warn("TTS generation failed:", speechErr);
+    audioOutput = speechResponse.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
+    if (!audioOutput) {
+      console.warn("TTS candidate returned no audio data");
+    } else {
+      console.log("TTS audio data received successfully");
     }
+  } catch (speechErr) {
+    console.warn("TTS generation failed:", speechErr);
+  }
 
-    return { text: textOutput, audio: audioOutput };
+  return { text: textOutput, audio: audioOutput };
   } catch (error) {
     console.error("AI Assistant Error:", error);
-    return { text: "የግንኙነት ስህተት ተከስቷል። እባክዎ ኢንተርኔትዎን ይፈትሹ። (Connection error. Please check your connection.)" };
+    return { text: "Error connecting to AI expert. Please check your internet connection." };
   }
 }
 
 let activeAudioContext: AudioContext | null = null;
 
 export async function playAudio(base64: string) {
+  if (!base64) return;
+  
   try {
     if (!activeAudioContext) {
       activeAudioContext = new (window.AudioContext || (window as any).webkitAudioContext)({ sampleRate: 24000 });
+    }
+
+    // Ensure AudioContext is active
+    if (activeAudioContext.state === 'suspended') {
+      await activeAudioContext.resume();
     }
 
     const float32Data = pcmToFloat32(base64);
@@ -119,6 +124,8 @@ export async function playAudio(base64: string) {
     const source = activeAudioContext.createBufferSource();
     source.buffer = buffer;
     source.connect(activeAudioContext.destination);
+    
+    console.log("Playing audio data, length:", float32Data.length);
     source.start();
   } catch (err) {
     console.error("Audio Playback Error:", err);

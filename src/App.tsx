@@ -14,6 +14,9 @@ import {
   ShieldCheck, 
   Activity, 
   Box, 
+  Mic,
+  MicOff,
+  Volume2,
   Radio, 
   ChevronRight, 
   Menu, 
@@ -264,6 +267,17 @@ const FloatingChat = ({
     recognition.onerror = (event: any) => {
       console.error('Speech recognition error:', event.error);
       setIsListening(false);
+      
+      let errorMsg = "Speech recognition error.";
+      if (event.error === 'not-allowed') {
+        errorMsg = "Microphone access denied. Please enable microphone permissions in your browser.";
+      } else if (event.error === 'no-speech') {
+        errorMsg = "No speech detected. Please try again.";
+      } else if (event.error === 'network') {
+        errorMsg = "Network error during speech recognition.";
+      }
+      
+      setAiHistory(prev => [...prev, { role: 'ai', text: `[System Error: ${errorMsg}]` }]);
     };
 
     recognition.start();
@@ -310,7 +324,7 @@ const FloatingChat = ({
                 <div className="absolute inset-0 z-10 bg-black/40 backdrop-blur-[2px] flex items-center justify-center pointer-events-none">
                   <div className="bg-zinc-900 p-6 rounded-2xl border border-zinc-800 flex flex-col items-center gap-4 shadow-2xl">
                     <div className="w-16 h-16 bg-red-500/20 rounded-full flex items-center justify-center">
-                      <Radio size={32} className="text-red-500 animate-pulse" />
+                      <Mic size={32} className="text-red-500 animate-pulse" />
                     </div>
                     <p className="text-white font-bold text-sm">Speak Now</p>
                     <VoiceWave />
@@ -337,8 +351,9 @@ const FloatingChat = ({
                       <button 
                         onClick={() => playAudio(h.audio!)}
                         className="absolute -right-8 top-1 p-1 text-zinc-600 hover:text-orange-500 transition-colors opacity-0 group-hover:opacity-100"
+                        title="Replay Audio"
                       >
-                        <Radio size={14} />
+                        <Volume2 size={14} />
                       </button>
                     )}
                   </div>
@@ -383,7 +398,7 @@ const FloatingChat = ({
                     onClick={toggleListen}
                     className={`transition-colors ${isListening ? 'text-red-500' : 'text-zinc-500 hover:text-white'}`}
                   >
-                    <Radio size={16} className={isListening ? 'animate-pulse' : ''} />
+                    {isListening ? <Mic size={16} className="animate-pulse" /> : <Mic size={16} />}
                   </button>
                 </div>
                 <button type="submit" disabled={!message.trim() || isProcessing} className="p-2 bg-orange-500 text-black rounded-lg disabled:opacity-50 hover:bg-orange-400">
